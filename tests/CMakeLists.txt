@@ -3,3 +3,20 @@ set_tests_properties(
     dp_cuda_smoke
     PROPERTIES PASS_REGULAR_EXPRESSION "DP-CUDA CPU project ready"
 )
+
+add_executable(dpcuda_dynamics_tests test_dynamics.cpp)
+target_link_libraries(dpcuda_dynamics_tests PRIVATE dpcuda_core)
+
+if(MSVC)
+    target_compile_options(dpcuda_dynamics_tests PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(
+        dpcuda_dynamics_tests
+        PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+    )
+endif()
+
+add_test(NAME dpcuda_dynamics COMMAND dpcuda_dynamics_tests)
