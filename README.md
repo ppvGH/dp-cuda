@@ -9,14 +9,15 @@ a shared physical model across its execution backends and user interfaces.
 
 ## Project status
 
-The repository currently contains the initial C++ project structure, a minimal
-executable, and a CTest smoke test. The physical model and numerical conventions
-have been defined, while the CPU simulator is under development.
+The C++ core currently provides the single-precision equations of motion,
+fixed-step RK4 integration, and complete CPU trajectories for one double
+pendulum. The command-line executable remains a minimal project smoke check.
 
 ## Documentation
 
 - [Scientific model](docs/scientific-model.md)
 - [Numerical methods](docs/numerical-methods.md)
+- [C++ API](docs/cpp-api.md)
 
 ## Requirements
 
@@ -64,8 +65,7 @@ and produces the expected confirmation message.
 
 ## Current limitations
 
-- The physical simulation is not implemented yet.
-- Only the initial CPU-oriented C++ structure is available.
+- Only single-pendulum CPU trajectories are currently implemented.
+- Only single-precision calculations are currently available.
 - CUDA execution is not available yet.
 - Python bindings and user interfaces are not available yet.
-
