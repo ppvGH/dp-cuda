@@ -9,18 +9,33 @@ project(
 
 option(DP_CUDA_BUILD_TESTS "Build the test suite" ON)
 
-add_executable(dp_cuda src/main.cpp)
-set_target_properties(dp_cuda PROPERTIES OUTPUT_NAME "dp-cuda")
-target_compile_features(dp_cuda PRIVATE cxx_std_17)
+add_library(
+    dpcuda_core
+    src/dynamics.cpp
+)
+
+target_compile_features(dpcuda_core PUBLIC cxx_std_17)
+
 target_include_directories(
-    dp_cuda
-    PRIVATE
+    dpcuda_core
+    PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
 
+add_executable(dp_cuda src/main.cpp)
+set_target_properties(dp_cuda PROPERTIES OUTPUT_NAME "dp-cuda")
+
+target_link_libraries(
+    dp_cuda
+    PRIVATE
+        dpcuda_core
+)
+
 if(MSVC)
+    target_compile_options(dpcuda_core PRIVATE /W4 /permissive-)
     target_compile_options(dp_cuda PRIVATE /W4 /permissive-)
 else()
+    target_compile_options(dpcuda_core PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(dp_cuda PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
