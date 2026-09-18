@@ -51,6 +51,8 @@ inline State rk4_update(
 //
 // The derivative callable maps a State to its time derivative. This low-level
 // operation assumes a finite, positive timestep and valid input data.
+// Templating the derivative keeps RK4 independent of the physical model and
+// avoids the runtime indirection of a type-erased callable such as std::function.
 template <typename Derivative>
 State rk4_step(
     const State& state,
