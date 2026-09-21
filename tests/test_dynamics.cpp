@@ -1,29 +1,13 @@
 #include "dpcuda/dynamics.hpp"
+#include "test_utils.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
 namespace {
 
-constexpr float tolerance = 1.0e-5F;
-
-// The constant term provides an absolute tolerance near zero, while scale
-// provides a relative tolerance for values with larger magnitude.
-bool nearly_equal(float actual, float expected) {
-    const float scale = std::max(std::fabs(actual), std::fabs(expected));
-    return std::fabs(actual - expected) <= tolerance * (1.0F + scale);
-}
-
-void require_near(float actual, float expected, const std::string& quantity) {
-    if (!nearly_equal(actual, expected)) {
-        throw std::runtime_error(
-            quantity + ": expected " + std::to_string(expected)
-            + ", got " + std::to_string(actual));
-    }
-}
+using test_utils::require_near;
 
 void require_finite(float value, const std::string& quantity) {
     if (!std::isfinite(value)) {
@@ -70,6 +54,9 @@ void ordinary_state_has_finite_derivative() {
 
 void sign_reversal_reverses_derivative() {
     const dpcuda::State state{0.7F, -0.3F, 0.4F, -0.2F};
+    // Reflecting both angles and angular velocities reverses the motion while
+    // preserving the geometry, so every component of the derivative changes
+    // sign for this unforced model.
     const dpcuda::State reversed_state{
         -state.theta1,
         -state.theta2,
@@ -92,23 +79,18 @@ void sign_reversal_reverses_derivative() {
 }  // namespace
 
 int main() {
-    int failures = 0;
+    test_utils::Runner runner;
 
-    const auto run = [&failures](const char* name, auto test) {
-        try {
-            test();
-        } catch (const std::exception& error) {
-            ++failures;
-            std::cerr << "[FAIL] " << name << ": " << error.what() << '\n';
-        }
-    };
-
-    run("equilibrium_has_zero_derivative", equilibrium_has_zero_derivative);
-    run(
+    runner.run("equilibrium_has_zero_derivative", equilibrium_has_zero_derivative);
+    runner.run(
         "angular_derivatives_equal_angular_velocities",
         angular_derivatives_equal_angular_velocities);
-    run("ordinary_state_has_finite_derivative", ordinary_state_has_finite_derivative);
-    run("sign_reversal_reverses_derivative", sign_reversal_reverses_derivative);
+    runner.run(
+        "ordinary_state_has_finite_derivative",
+        ordinary_state_has_finite_derivative);
+    runner.run(
+        "sign_reversal_reverses_derivative",
+        sign_reversal_reverses_derivative);
 
-    return failures == 0 ? 0 : 1;
+    return runner.exit_code();
 }

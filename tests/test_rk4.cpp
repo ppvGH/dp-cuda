@@ -1,40 +1,13 @@
 #include "dpcuda/dynamics.hpp"
 #include "dpcuda/rk4.hpp"
+#include "test_utils.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <stdexcept>
-#include <string>
 
 namespace {
 
-constexpr float tolerance = 1.0e-5F;
-
-// The constant term provides an absolute tolerance near zero, while scale
-// provides a relative tolerance for values with larger magnitude.
-bool nearly_equal(float actual, float expected) {
-    const float scale = std::max(std::fabs(actual), std::fabs(expected));
-    return std::fabs(actual - expected) <= tolerance * (1.0F + scale);
-}
-
-void require_near(float actual, float expected, const std::string& quantity) {
-    if (!nearly_equal(actual, expected)) {
-        throw std::runtime_error(
-            quantity + ": expected " + std::to_string(expected)
-            + ", got " + std::to_string(actual));
-    }
-}
-
-void require_state_near(
-    const dpcuda::State& actual,
-    const dpcuda::State& expected
-) {
-    require_near(actual.theta1, expected.theta1, "theta1");
-    require_near(actual.theta2, expected.theta2, "theta2");
-    require_near(actual.omega1, expected.omega1, "omega1");
-    require_near(actual.omega2, expected.omega2, "omega2");
-}
+using test_utils::require_near;
+using test_utils::require_state_near;
 
 void zero_derivative_preserves_state() {
     const dpcuda::State initial{0.3F, -0.7F, 1.2F, -0.4F};
@@ -71,6 +44,8 @@ void constant_derivative_is_integrated_exactly() {
 
 void exponential_equation_matches_analytical_solution() {
     dpcuda::State state{1.0F, 0.0F, 0.0F, 0.0F};
+    // The scalar equation y' = y with y(0) = 1 has the exact solution
+    // y(t) = exp(t), providing a controlled accuracy check at t = 1.
     const auto exponential_derivative = [](const dpcuda::State& current) {
         return dpcuda::State{current.theta1, 0.0F, 0.0F, 0.0F};
     };
@@ -104,26 +79,18 @@ void pendulum_equilibrium_is_preserved() {
 }  // namespace
 
 int main() {
-    int failures = 0;
+    test_utils::Runner runner;
 
-    const auto run = [&failures](const char* name, auto test) {
-        try {
-            test();
-        } catch (const std::exception& error) {
-            ++failures;
-            std::cerr << "[FAIL] " << name << ": " << error.what() << '\n';
-        }
-    };
-
-    run("zero_derivative_preserves_state", zero_derivative_preserves_state);
-    run(
+    runner.run("zero_derivative_preserves_state", zero_derivative_preserves_state);
+    runner.run(
         "constant_derivative_is_integrated_exactly",
         constant_derivative_is_integrated_exactly);
-    run(
+    runner.run(
         "exponential_equation_matches_analytical_solution",
         exponential_equation_matches_analytical_solution);
-    run("pendulum_equilibrium_is_preserved", pendulum_equilibrium_is_preserved);
+    runner.run(
+        "pendulum_equilibrium_is_preserved",
+        pendulum_equilibrium_is_preserved);
 
-    return failures == 0 ? 0 : 1;
+    return runner.exit_code();
 }
-

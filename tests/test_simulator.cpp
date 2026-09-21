@@ -1,44 +1,21 @@
 #include "dpcuda/simulator.hpp"
+#include "test_utils.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <string>
 
 namespace {
 
-constexpr float tolerance = 1.0e-5F;
-
-bool nearly_equal(float actual, float expected) {
-    const float scale = std::max(std::fabs(actual), std::fabs(expected));
-    return std::fabs(actual - expected) <= tolerance * (1.0F + scale);
-}
+using test_utils::require_near;
+using test_utils::require_state_near;
 
 void require(bool condition, const std::string& message) {
     if (!condition) {
         throw std::runtime_error(message);
     }
-}
-
-void require_near(float actual, float expected, const std::string& quantity) {
-    if (!nearly_equal(actual, expected)) {
-        throw std::runtime_error(
-            quantity + ": expected " + std::to_string(expected)
-            + ", got " + std::to_string(actual));
-    }
-}
-
-void require_state_near(
-    const dpcuda::State& actual,
-    const dpcuda::State& expected
-) {
-    require_near(actual.theta1, expected.theta1, "theta1");
-    require_near(actual.theta2, expected.theta2, "theta2");
-    require_near(actual.omega1, expected.omega1, "omega1");
-    require_near(actual.omega2, expected.omega2, "omega2");
 }
 
 template <typename Operation>
@@ -112,6 +89,8 @@ void ordinary_trajectory_remains_finite() {
 void identical_inputs_produce_identical_trajectories() {
     const dpcuda::State initial{0.7F, -0.3F, 0.4F, -0.2F};
 
+    // Exact comparisons intentionally test bit-for-bit reproducibility for
+    // repeated executions with the same inputs, not numerical proximity.
     const dpcuda::SimulationResult first =
         dpcuda::simulate(initial, {}, 0.01F, 20);
     const dpcuda::SimulationResult second =
@@ -202,40 +181,38 @@ void unrepresentable_sample_count_is_rejected() {
 }  // namespace
 
 int main() {
-    int failures = 0;
+    test_utils::Runner runner;
 
-    const auto run = [&failures](const char* name, auto test) {
-        try {
-            test();
-        } catch (const std::exception& error) {
-            ++failures;
-            std::cerr << "[FAIL] " << name << ": " << error.what() << '\n';
-        }
-    };
-
-    run(
+    runner.run(
         "zero_steps_returns_only_initial_sample",
         zero_steps_returns_only_initial_sample);
-    run(
+    runner.run(
         "sample_count_and_times_follow_contract",
         sample_count_and_times_follow_contract);
-    run("equilibrium_remains_stationary", equilibrium_remains_stationary);
-    run("ordinary_trajectory_remains_finite", ordinary_trajectory_remains_finite);
-    run(
+    runner.run("equilibrium_remains_stationary", equilibrium_remains_stationary);
+    runner.run(
+        "ordinary_trajectory_remains_finite",
+        ordinary_trajectory_remains_finite);
+    runner.run(
         "identical_inputs_produce_identical_trajectories",
         identical_inputs_produce_identical_trajectories);
-    run(
+    runner.run(
         "non_finite_initial_state_is_rejected",
         non_finite_initial_state_is_rejected);
-    run("non_positive_mass_is_rejected", non_positive_mass_is_rejected);
-    run("non_positive_length_is_rejected", non_positive_length_is_rejected);
-    run("negative_gravity_is_rejected", negative_gravity_is_rejected);
-    run("non_positive_timestep_is_rejected", non_positive_timestep_is_rejected);
-    run("non_finite_timestep_is_rejected", non_finite_timestep_is_rejected);
-    run(
+    runner.run("non_positive_mass_is_rejected", non_positive_mass_is_rejected);
+    runner.run(
+        "non_positive_length_is_rejected",
+        non_positive_length_is_rejected);
+    runner.run("negative_gravity_is_rejected", negative_gravity_is_rejected);
+    runner.run(
+        "non_positive_timestep_is_rejected",
+        non_positive_timestep_is_rejected);
+    runner.run(
+        "non_finite_timestep_is_rejected",
+        non_finite_timestep_is_rejected);
+    runner.run(
         "unrepresentable_sample_count_is_rejected",
         unrepresentable_sample_count_is_rejected);
 
-    return failures == 0 ? 0 : 1;
+    return runner.exit_code();
 }
-
