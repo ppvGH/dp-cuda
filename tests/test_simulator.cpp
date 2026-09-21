@@ -1,6 +1,7 @@
 #include "dpcuda/simulator.hpp"
 #include "test_utils.hpp"
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -112,56 +113,91 @@ void identical_inputs_produce_identical_trajectories() {
     }
 }
 
-void non_finite_initial_state_is_rejected() {
-    dpcuda::State state{};
-    state.theta1 = std::numeric_limits<float>::quiet_NaN();
+void every_non_finite_initial_state_component_is_rejected() {
+    const std::array<float dpcuda::State::*, 4> components{
+        &dpcuda::State::theta1,
+        &dpcuda::State::theta2,
+        &dpcuda::State::omega1,
+        &dpcuda::State::omega2
+    };
+    const std::array<float, 3> invalid_values{
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity()
+    };
 
-    require_invalid_argument([&state] {
-        static_cast<void>(dpcuda::simulate(state, {}, 0.01F, 1));
-    });
+    for (const auto component : components) {
+        for (const float invalid_value : invalid_values) {
+            dpcuda::State state{};
+            state.*component = invalid_value;
+
+            require_invalid_argument([&state] {
+                static_cast<void>(dpcuda::simulate(state, {}, 0.01F, 1));
+            });
+        }
+    }
 }
 
-void non_positive_mass_is_rejected() {
-    dpcuda::Parameters parameters{};
-    parameters.m1 = 0.0F;
+void invalid_masses_and_lengths_are_rejected() {
+    const std::array<float dpcuda::Parameters::*, 4> positive_parameters{
+        &dpcuda::Parameters::m1,
+        &dpcuda::Parameters::m2,
+        &dpcuda::Parameters::l1,
+        &dpcuda::Parameters::l2
+    };
+    const std::array<float, 5> invalid_values{
+        0.0F,
+        -1.0F,
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity()
+    };
 
-    require_invalid_argument([&parameters] {
-        static_cast<void>(dpcuda::simulate({}, parameters, 0.01F, 1));
-    });
+    for (const auto parameter : positive_parameters) {
+        for (const float invalid_value : invalid_values) {
+            dpcuda::Parameters parameters{};
+            parameters.*parameter = invalid_value;
+
+            require_invalid_argument([&parameters] {
+                static_cast<void>(
+                    dpcuda::simulate({}, parameters, 0.01F, 1));
+            });
+        }
+    }
 }
 
-void non_positive_length_is_rejected() {
-    dpcuda::Parameters parameters{};
-    parameters.l2 = -1.0F;
+void invalid_gravity_values_are_rejected() {
+    const std::array<float, 4> invalid_values{
+        -1.0F,
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity()
+    };
 
-    require_invalid_argument([&parameters] {
-        static_cast<void>(dpcuda::simulate({}, parameters, 0.01F, 1));
-    });
+    for (const float invalid_value : invalid_values) {
+        dpcuda::Parameters parameters{};
+        parameters.g = invalid_value;
+
+        require_invalid_argument([&parameters] {
+            static_cast<void>(dpcuda::simulate({}, parameters, 0.01F, 1));
+        });
+    }
 }
 
-void negative_gravity_is_rejected() {
-    dpcuda::Parameters parameters{};
-    parameters.g = -1.0F;
+void invalid_timesteps_are_rejected() {
+    const std::array<float, 5> invalid_values{
+        0.0F,
+        -1.0F,
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity()
+    };
 
-    require_invalid_argument([&parameters] {
-        static_cast<void>(dpcuda::simulate({}, parameters, 0.01F, 1));
-    });
-}
-
-void non_positive_timestep_is_rejected() {
-    require_invalid_argument([] {
-        static_cast<void>(dpcuda::simulate({}, {}, 0.0F, 1));
-    });
-}
-
-void non_finite_timestep_is_rejected() {
-    require_invalid_argument([] {
-        static_cast<void>(dpcuda::simulate(
-            {},
-            {},
-            std::numeric_limits<float>::infinity(),
-            1));
-    });
+    for (const float invalid_value : invalid_values) {
+        require_invalid_argument([invalid_value] {
+            static_cast<void>(dpcuda::simulate({}, {}, invalid_value, 1));
+        });
+    }
 }
 
 void unrepresentable_sample_count_is_rejected() {
@@ -197,19 +233,15 @@ int main() {
         "identical_inputs_produce_identical_trajectories",
         identical_inputs_produce_identical_trajectories);
     runner.run(
-        "non_finite_initial_state_is_rejected",
-        non_finite_initial_state_is_rejected);
-    runner.run("non_positive_mass_is_rejected", non_positive_mass_is_rejected);
+        "every_non_finite_initial_state_component_is_rejected",
+        every_non_finite_initial_state_component_is_rejected);
     runner.run(
-        "non_positive_length_is_rejected",
-        non_positive_length_is_rejected);
-    runner.run("negative_gravity_is_rejected", negative_gravity_is_rejected);
+        "invalid_masses_and_lengths_are_rejected",
+        invalid_masses_and_lengths_are_rejected);
     runner.run(
-        "non_positive_timestep_is_rejected",
-        non_positive_timestep_is_rejected);
-    runner.run(
-        "non_finite_timestep_is_rejected",
-        non_finite_timestep_is_rejected);
+        "invalid_gravity_values_are_rejected",
+        invalid_gravity_values_are_rejected);
+    runner.run("invalid_timesteps_are_rejected", invalid_timesteps_are_rejected);
     runner.run(
         "unrepresentable_sample_count_is_rejected",
         unrepresentable_sample_count_is_rejected);

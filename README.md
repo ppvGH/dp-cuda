@@ -22,6 +22,10 @@ minimal project smoke check.
 - [Scientific model](docs/scientific-model.md)
 - [Numerical methods](docs/numerical-methods.md)
 - [C++ API](docs/cpp-api.md)
+- [CPU ensembles and analysis](docs/ensemble-analysis.md)
+
+The ensemble and analysis document defines the Phase 2 contracts. The
+corresponding API is not implemented yet.
 
 ## Requirements
 

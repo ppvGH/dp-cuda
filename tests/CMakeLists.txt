@@ -4,70 +4,42 @@ set_tests_properties(
     PROPERTIES PASS_REGULAR_EXPRESSION "DP-CUDA CPU project ready"
 )
 
-add_executable(dpcuda_dynamics_tests test_dynamics.cpp)
-target_link_libraries(dpcuda_dynamics_tests PRIVATE dpcuda_core)
+function(dpcuda_add_cpp_test test_name target_name source_file)
+    add_executable(${target_name} ${source_file})
+    target_link_libraries(${target_name} PRIVATE dpcuda_core)
 
-if(MSVC)
-    target_compile_options(dpcuda_dynamics_tests PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(
-        dpcuda_dynamics_tests
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-    )
-endif()
+    if(MSVC)
+        target_compile_options(${target_name} PRIVATE /W4 /permissive- /EHsc)
+    else()
+        target_compile_options(
+            ${target_name}
+            PRIVATE
+                -Wall
+                -Wextra
+                -Wpedantic
+        )
+    endif()
 
-add_test(NAME dpcuda_dynamics COMMAND dpcuda_dynamics_tests)
+    add_test(NAME ${test_name} COMMAND ${target_name})
+endfunction()
 
-add_executable(dpcuda_energy_tests test_energy.cpp)
-target_link_libraries(dpcuda_energy_tests PRIVATE dpcuda_core)
-
-if(MSVC)
-    target_compile_options(dpcuda_energy_tests PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(
-        dpcuda_energy_tests
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-    )
-endif()
-
-add_test(NAME dpcuda_energy COMMAND dpcuda_energy_tests)
-
-add_executable(dpcuda_rk4_tests test_rk4.cpp)
-target_link_libraries(dpcuda_rk4_tests PRIVATE dpcuda_core)
-
-if(MSVC)
-    target_compile_options(dpcuda_rk4_tests PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(
-        dpcuda_rk4_tests
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-    )
-endif()
-
-add_test(NAME dpcuda_rk4 COMMAND dpcuda_rk4_tests)
-
-add_executable(dpcuda_simulator_tests test_simulator.cpp)
-target_link_libraries(dpcuda_simulator_tests PRIVATE dpcuda_core)
-
-if(MSVC)
-    target_compile_options(dpcuda_simulator_tests PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(
-        dpcuda_simulator_tests
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-    )
-endif()
-
-add_test(NAME dpcuda_simulator COMMAND dpcuda_simulator_tests)
+dpcuda_add_cpp_test(
+    dpcuda_dynamics
+    dpcuda_dynamics_tests
+    test_dynamics.cpp
+)
+dpcuda_add_cpp_test(
+    dpcuda_energy
+    dpcuda_energy_tests
+    test_energy.cpp
+)
+dpcuda_add_cpp_test(
+    dpcuda_rk4
+    dpcuda_rk4_tests
+    test_rk4.cpp
+)
+dpcuda_add_cpp_test(
+    dpcuda_simulator
+    dpcuda_simulator_tests
+    test_simulator.cpp
+)

@@ -44,6 +44,61 @@ The default-constructed state is the stationary hanging equilibrium.
 | `l2` | Second rod length | `1.0 m` | Finite and greater than zero |
 | `g` | Gravitational acceleration magnitude | `9.80665 m/s^2` | Finite and non-negative |
 
+## Equations of motion
+
+Header:
+
+```cpp
+#include "dpcuda/dynamics.hpp"
+```
+
+The derivative of one state is evaluated with:
+
+```cpp
+dpcuda::State dpcuda::compute_state_derivative(
+    const dpcuda::State& state,
+    const dpcuda::Parameters& parameters
+);
+```
+
+The returned `State` is interpreted as:
+
+```text
+(dtheta1/dt, dtheta2/dt, domega1/dt, domega2/dt)
+```
+
+This is a low-level operation. It does not validate its arguments and assumes
+finite state components, positive finite masses and lengths, and finite
+non-negative gravity. The function does not modify its arguments.
+
+## RK4 integration step
+
+Header:
+
+```cpp
+#include "dpcuda/rk4.hpp"
+```
+
+One fixed classical fourth-order Runge-Kutta step is computed with:
+
+```cpp
+template <typename Derivative>
+dpcuda::State dpcuda::rk4_step(
+    const dpcuda::State& state,
+    float dt,
+    const Derivative& compute_derivative
+);
+```
+
+`compute_derivative` must accept a `const dpcuda::State&` and return its
+derivative as a `dpcuda::State`. It is evaluated four times per integration
+step.
+
+This low-level operation does not validate `dt` or the returned derivatives. It
+assumes a finite positive timestep and valid finite input data. It returns a new
+state without modifying the supplied state. Exceptions raised by the
+derivative callable are propagated to the caller.
+
 ## Energy
 
 Header:

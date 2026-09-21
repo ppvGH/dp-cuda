@@ -154,6 +154,27 @@ computed as the sum of the returned kinetic and potential values.
 For the ideal continuous model, total energy is conserved. A numerical
 method can only approximate this conservation law.
 
+## First-flip event
+
+A flip is associated with either rod reaching or passing the upward vertical
+orientation. For the absolute, unwrapped angles used by this project, the
+continuous first-flip time is defined as:
+
+```text
+t_flip = inf { t >= 0 :
+               abs(theta1(t)) >= pi or abs(theta2(t)) >= pi }
+```
+
+A flip by either rod is sufficient. If the initial state already satisfies the
+condition, the first-flip time is zero.
+
+This event definition does not alter the equations of motion. It is an analysis
+applied to the simulated trajectory. Because angles are not wrapped, complete
+rotations remain visible to the detector.
+
+The numerical approximation of this event is documented in
+[Numerical Methods](numerical-methods.md).
+
 ## Chaotic behavior
 
 The double pendulum can exhibit sensitive dependence on initial conditions.

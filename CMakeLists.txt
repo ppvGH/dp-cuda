@@ -50,8 +50,8 @@ target_link_libraries(
 )
 
 if(MSVC)
-    target_compile_options(dpcuda_core PRIVATE /W4 /permissive-)
-    target_compile_options(dp_cuda PRIVATE /W4 /permissive-)
+    target_compile_options(dpcuda_core PRIVATE /W4 /permissive- /EHsc)
+    target_compile_options(dp_cuda PRIVATE /W4 /permissive- /EHsc)
 else()
     target_compile_options(dpcuda_core PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(dp_cuda PRIVATE -Wall -Wextra -Wpedantic)

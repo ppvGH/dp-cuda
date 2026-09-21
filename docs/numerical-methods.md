@@ -127,6 +127,68 @@ or strongly chaotic trajectories may require a smaller timestep. A user-facing
 default and supported range remain to be selected from a broader validation
 set.
 
+## Discrete first-flip detection
+
+The initial CPU implementation detects flips at stored integration samples. Let
+`state[i]` be the state at:
+
+```text
+time[i] = i * dt
+```
+
+The first-flip step is the smallest index `i` for which:
+
+```text
+abs(theta1[i]) >= pi or abs(theta2[i]) >= pi
+```
+
+Sample zero is included. Therefore an initial state that already satisfies the
+condition has first-flip step `0`.
+
+The Phase 2 baseline does not interpolate the event inside an integration
+interval. Its reported time is quantized to:
+
+```text
+first_flip_time = first_flip_step * dt
+```
+
+If no flip is detected through sample `steps`, the step value is `-1`. This
+fixed signed sentinel is intended to remain consistent across C++, Python, CPU,
+and CUDA implementations.
+
+A timestep that is too large may provide a poor approximation of the continuous
+event time. Event-time accuracy must therefore be studied separately from the
+correctness of the detector.
+
+## Distance between states
+
+Nearby-trajectory analysis uses the unwrapped angular differences:
+
+```text
+delta_theta1 = theta1_b - theta1_a
+delta_theta2 = theta2_b - theta2_a
+delta_omega1 = omega1_b - omega1_a
+delta_omega2 = omega2_b - omega2_a
+```
+
+The angles are deliberately not reduced modulo `2*pi`, because complete
+rotations are part of the simulated state.
+
+To avoid directly combining angular positions and angular velocities with
+different units, the distance uses an explicit positive reference time `tau`:
+
+```text
+distance_tau =
+    sqrt(delta_theta1^2
+         + delta_theta2^2
+         + (tau * delta_omega1)^2
+         + (tau * delta_omega2)^2)
+```
+
+`tau` is expressed in seconds and must be finite and greater than zero. It is a
+property of the analysis, not of the physical model, and must be reported with
+the result.
+
 ## Limitations
 
 - The reference integrator uses a fixed timestep and provides no adaptive error
