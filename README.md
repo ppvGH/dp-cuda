@@ -1,5 +1,8 @@
 # dp-cuda
 
+[![CPU CI](https://github.com/ppvGH/dp-cuda/actions/workflows/cpu-ci.yml/badge.svg)](https://github.com/ppvGH/dp-cuda/actions/workflows/cpu-ci.yml)
+[![codecov](https://codecov.io/gh/ppvGH/dp-cuda/graph/badge.svg)](https://codecov.io/gh/ppvGH/dp-cuda)
+
 `dp-cuda` is a double-pendulum simulator designed to support CPU and CUDA
 execution, single- and double-precision calculations, and large ensembles of
 initial conditions.

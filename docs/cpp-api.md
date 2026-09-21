@@ -141,8 +141,8 @@ Parameters:
 - `steps`: number of RK4 integration intervals.
 
 The C++ core currently requires an explicit `dt`. A documented user-facing
-default and supported range will be selected after convergence and energy-drift
-studies.
+default and supported range will be selected after validation over a broader
+set of physical configurations.
 
 Example:
 

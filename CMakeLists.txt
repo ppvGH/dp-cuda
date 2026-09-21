@@ -8,6 +8,11 @@ project(
 )
 
 option(DP_CUDA_BUILD_TESTS "Build the test suite" ON)
+option(
+    DP_CUDA_ENABLE_COVERAGE
+    "Instrument GNU builds for source coverage"
+    OFF
+)
 
 add_library(
     dpcuda_core
@@ -23,6 +28,17 @@ target_include_directories(
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
+
+if(DP_CUDA_ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR "Coverage instrumentation requires GNU C++")
+    endif()
+
+    # Coverage must propagate to every executable that links the instrumented
+    # static library so that the gcov runtime is present at link time.
+    target_compile_options(dpcuda_core PUBLIC --coverage -O0 -g)
+    target_link_options(dpcuda_core PUBLIC --coverage)
+endif()
 
 add_executable(dp_cuda src/main.cpp)
 set_target_properties(dp_cuda PROPERTIES OUTPUT_NAME "dp-cuda")
