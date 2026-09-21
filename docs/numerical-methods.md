@@ -84,13 +84,48 @@ finite duration is one useful indicator of numerical accuracy, but it does not
 provide a complete error estimate on its own.
 
 A convergence study compares solutions obtained over the same duration with
-successively smaller timesteps. The default timestep and the supported
-user-selectable range will be chosen by considering convergence, energy drift,
-execution time, and the range of physical configurations the software is
-intended to handle.
+successively smaller timesteps. Timestep selection must consider convergence,
+energy drift, execution time, floating-point precision, and the range of
+physical configurations the software is intended to handle.
 
-TODO: Determine the default `dt` and supported range through convergence and
-energy-drift studies.
+### Float CPU energy study
+
+The energy-conservation test uses the default physical parameters and the
+initial state:
+
+```text
+(theta1, theta2, omega1, omega2) = (0.7, -0.3, 0.4, -0.2)
+```
+
+The same 10-second trajectory was simulated in `float` with successively
+halved timesteps. The final-state error is the largest absolute component
+difference relative to the `dt = 0.00125 s` result.
+
+| `dt` (s) | Maximum absolute energy drift (J) | Maximum relative energy drift | Final-state error |
+| ---: | ---: | ---: | ---: |
+| 0.08 | 1.699e-1 | 3.275e-2 | 4.297e-1 |
+| 0.04 | 7.071e-3 | 1.363e-3 | 1.491e-2 |
+| 0.02 | 2.322e-4 | 4.477e-5 | 4.325e-4 |
+| 0.01 | 8.106e-6 | 1.563e-6 | 1.290e-5 |
+| 0.005 | 1.192e-5 | 2.298e-6 | 3.004e-5 |
+| 0.0025 | 1.669e-5 | 3.218e-6 | 4.351e-5 |
+| 0.00125 | 2.050e-5 | 3.953e-6 | reference |
+
+From `dt = 0.08 s` through `dt = 0.01 s`, both indicators decrease rapidly
+as the timestep is halved. Below `0.01 s`, single-precision rounding dominates
+this particular experiment and the measured errors no longer decrease
+monotonically.
+
+The automated conservation test therefore uses `dt = 0.01 s`, 1000 steps, and
+a maximum relative energy-drift tolerance of `1.0e-5`. This is about 6.4 times
+the measured drift at that timestep, allowing for compiler variation, while
+remaining below the `4.477e-5` drift measured at `dt = 0.02 s`.
+
+This controlled study justifies the timestep and tolerance of the test; it does
+not establish a universal default or supported timestep range. More energetic
+or strongly chaotic trajectories may require a smaller timestep. A user-facing
+default and supported range remain to be selected from a broader validation
+set.
 
 ## Limitations
 
@@ -107,6 +142,7 @@ energy-drift studies.
 
 Smaller timesteps generally reduce integration error but increase execution time
 and, when full trajectories are retained, memory use. No single timestep is
-appropriate for every initial condition and duration. The software therefore
-provides a documented default while allowing users to select another value
-within the supported range.
+appropriate for every initial condition and duration. The current C++ API
+therefore requires callers to select an explicit timestep. A future
+user-facing default and supported range will require validation over a broader
+set of physical configurations.

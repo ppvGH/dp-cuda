@@ -21,6 +21,23 @@ endif()
 
 add_test(NAME dpcuda_dynamics COMMAND dpcuda_dynamics_tests)
 
+add_executable(dpcuda_energy_tests test_energy.cpp)
+target_link_libraries(dpcuda_energy_tests PRIVATE dpcuda_core)
+
+if(MSVC)
+    target_compile_options(dpcuda_energy_tests PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(
+        dpcuda_energy_tests
+        PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+    )
+endif()
+
+add_test(NAME dpcuda_energy COMMAND dpcuda_energy_tests)
+
 add_executable(dpcuda_rk4_tests test_rk4.cpp)
 target_link_libraries(dpcuda_rk4_tests PRIVATE dpcuda_core)
 

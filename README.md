@@ -10,8 +10,9 @@ a shared physical model across its execution backends and user interfaces.
 ## Project status
 
 The C++ core currently provides the single-precision equations of motion,
-fixed-step RK4 integration, and complete CPU trajectories for one double
-pendulum. The command-line executable remains a minimal project smoke check.
+mechanical-energy evaluation, fixed-step RK4 integration, and complete CPU
+trajectories for one double pendulum. The command-line executable remains a
+minimal project smoke check.
 
 ## Documentation
 
@@ -60,8 +61,9 @@ Run the test suite from the directory containing this README:
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-The current suite contains a smoke test that verifies that the executable starts
-and produces the expected confirmation message.
+The suite covers the executable smoke check, equations of motion, mechanical
+energy, RK4 integration, simulator behavior, input validation, and energy
+conservation on a documented reference trajectory.
 
 ## Current limitations
 
