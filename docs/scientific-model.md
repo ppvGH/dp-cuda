@@ -148,6 +148,9 @@ The total mechanical energy is:
 E = T + V
 ```
 
+The C++ energy evaluator returns all three quantities in joules. The total is
+computed as the sum of the returned kinetic and potential values.
+
 For the ideal continuous model, total energy is conserved. A numerical
 method can only approximate this conservation law.
 

@@ -12,6 +12,7 @@ option(DP_CUDA_BUILD_TESTS "Build the test suite" ON)
 add_library(
     dpcuda_core
     src/dynamics.cpp
+    src/energy.cpp
     src/simulator.cpp
 )
 

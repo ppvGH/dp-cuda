@@ -44,6 +44,52 @@ The default-constructed state is the stationary hanging equilibrium.
 | `l2` | Second rod length | `1.0 m` | Finite and greater than zero |
 | `g` | Gravitational acceleration magnitude | `9.80665 m/s^2` | Finite and non-negative |
 
+## Energy
+
+Header:
+
+```cpp
+#include "dpcuda/energy.hpp"
+```
+
+`dpcuda::Energy` stores the kinetic, potential, and total mechanical energy of
+one state. All three fields are expressed in joules:
+
+```cpp
+struct Energy {
+    float kinetic;
+    float potential;
+    float total;
+};
+```
+
+Energy is evaluated with:
+
+```cpp
+dpcuda::Energy dpcuda::compute_energy(
+    const dpcuda::State& state,
+    const dpcuda::Parameters& parameters
+);
+```
+
+Potential energy is measured relative to the stable hanging configuration,
+where `theta1 = theta2 = 0`. `total` is the sum of `kinetic` and `potential`.
+
+This low-level function performs no input validation and throws no exceptions.
+It requires finite state components, positive finite masses and lengths, and
+finite non-negative gravity. These are the same physical preconditions used by
+the equations of motion.
+
+Example:
+
+```cpp
+#include "dpcuda/energy.hpp"
+
+const dpcuda::State state{0.7F, -0.3F, 0.4F, -0.2F};
+const dpcuda::Parameters parameters{};
+const dpcuda::Energy energy = dpcuda::compute_energy(state, parameters);
+```
+
 ## SimulationResult
 
 Header:
@@ -135,4 +181,3 @@ therefore grows linearly with `steps + 1` and is approximately:
 excluding the small fixed overhead of the two vectors. Analyses that do not
 require a complete trajectory will use reduced result types rather than this
 interface.
-
